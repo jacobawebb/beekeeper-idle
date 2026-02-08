@@ -24,6 +24,15 @@ type StoreState = {
   setMusicVolume: (value: number) => void;
   setSfxVolume: (value: number) => void;
   purchaseHive: () => void;
+  hiveWorldPositions: Record<string, [number, number, number]>;
+  setHiveWorldPositions: (positions: Record<string, [number, number, number]>) => void;
+  setAutoUpgradeEnabled: (value: boolean) => void;
+  debug: {
+    overlay: boolean;
+    beesStats: boolean;
+    beesMarkers: boolean;
+  };
+  setDebugFlag: (key: "overlay" | "beesStats" | "beesMarkers", value: boolean) => void;
 };
 
 export const useGameStore = create<StoreState>((set) => ({
@@ -126,4 +135,42 @@ export const useGameStore = create<StoreState>((set) => ({
       void saveGameStateSafe(nextState);
       return { gameState: nextState };
     }),
+  hiveWorldPositions: {},
+  setHiveWorldPositions: (positions) => set({ hiveWorldPositions: positions }),
+  setAutoUpgradeEnabled: (value) =>
+    set((state) => {
+      if (!state.gameState) return state;
+      if (value) {
+        const unlocked = state.gameState.hives.some(
+          (hive) => hive.evolutionTier >= 1
+        );
+        if (!unlocked) {
+          return state;
+        }
+      }
+      const nextState: GameState = {
+        ...state.gameState,
+        settings: {
+          ...state.gameState.settings,
+          automation: {
+            ...state.gameState.settings.automation,
+            autoUpgradeEnabled: value,
+          },
+        },
+      };
+      void saveGameStateSafe(nextState);
+      return { gameState: nextState };
+    }),
+  debug: {
+    overlay: true,
+    beesStats: false,
+    beesMarkers: false,
+  },
+  setDebugFlag: (key, value) =>
+    set((state) => ({
+      debug: {
+        ...state.debug,
+        [key]: value,
+      },
+    })),
 }));

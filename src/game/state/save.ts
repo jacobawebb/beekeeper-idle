@@ -89,6 +89,14 @@ function isValidGameState(state: unknown): state is GameState {
   ) {
     return false;
   }
+  if (candidate.settings.automation !== undefined) {
+    if (typeof candidate.settings.automation !== "object") {
+      return false;
+    }
+    if (typeof candidate.settings.automation.autoUpgradeEnabled !== "boolean") {
+      return false;
+    }
+  }
   if (!candidate.flags || typeof candidate.flags !== "object") return false;
   if (typeof candidate.flags.hasBackedUpKey !== "boolean") return false;
   return true;
@@ -137,6 +145,9 @@ export function createInitialGameState(): GameState {
         musicVolume: 0.6,
         sfxVolume: 0.7,
       },
+      automation: {
+        autoUpgradeEnabled: false,
+      },
     },
     flags: {
       hasBackedUpKey: false,
@@ -158,6 +169,17 @@ export async function loadGameState(): Promise<GameState> {
       updatedAt: Date.now(),
     });
     return createInitialGameState();
+  }
+  if (!stored.settings.automation) {
+    return {
+      ...stored,
+      settings: {
+        ...stored.settings,
+        automation: {
+          autoUpgradeEnabled: false,
+        },
+      },
+    };
   }
   return stored;
 }

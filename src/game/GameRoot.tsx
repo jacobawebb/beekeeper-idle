@@ -12,17 +12,23 @@ import {
 import { useGameStore } from "./state/store";
 import { applyOfflineProgress } from "./engine/offline";
 import { step } from "./engine/step";
+import { applyHiveUpgrade } from "./engine/economy";
 import Hud from "./ui/Hud";
 import Panels from "./ui/Panels";
 import DebugOverlay from "./ui/DebugOverlay";
 import Menu from "./ui/Menu";
 import HiveContextMenu from "./ui/HiveContextMenu";
 import { ensureMusicStarted, setMusicVolume } from "./ui/audio";
+import type { GameState } from "./state/types";
 
 export default function GameRoot() {
   const gameState = useGameStore((state) => state.gameState);
   const setGameState = useGameStore((state) => state.setGameState);
   const updateGameState = useGameStore((state) => state.updateGameState);
+  const autoUpgradeEnabled =
+    useGameStore((state) => state.gameState?.settings.automation.autoUpgradeEnabled) ??
+    false;
+  const debugOverlay = useGameStore((state) => state.debug.overlay);
   const rafId = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
   const accumulatorRef = useRef(0);
@@ -161,10 +167,34 @@ export default function GameRoot() {
   }, []);
 
   useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+        return;
+      }
+      event.preventDefault();
+      setMenuOpen((open) => !open);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  useEffect(() => {
     if (!gameState) return;
 
     const fixedDtMs = 100;
     const maxFrameDelta = 1000;
+    const applyAutoUpgrades = (state: GameState) => {
+      if (!autoUpgradeEnabled) return state;
+      let nextState = state;
+      for (let i = 0; i < nextState.hives.length; i += 1) {
+        const hiveId = nextState.hives[i].id;
+        const upgraded = applyHiveUpgrade(nextState, hiveId);
+        nextState = upgraded;
+      }
+      return nextState;
+    };
 
     const tick = (now: number) => {
       if (lastTimeRef.current === null) {
@@ -176,7 +206,9 @@ export default function GameRoot() {
 
       accumulatorRef.current += delta;
       while (accumulatorRef.current >= fixedDtMs) {
-        updateGameState((current) => step(current, fixedDtMs));
+        updateGameState((current) =>
+          applyAutoUpgrades(step(current, fixedDtMs))
+        );
         accumulatorRef.current -= fixedDtMs;
         ticksThisSecondRef.current += 1;
       }
@@ -274,26 +306,33 @@ export default function GameRoot() {
         <Hud
           menuOpen={menuOpen}
           onMenuToggle={() => setMenuOpen((open) => !open)}
-          lastSavedAt={lastSavedAt}
-          nextSaveAt={nextSaveAt}
-          nowTs={nowTs}
         />
       </div>
       <div className="absolute bottom-4 left-1/2 z-10 w-[96vw] -translate-x-1/2">
         <Panels />
       </div>
       <div className="pointer-events-none absolute right-4 top-4 z-10">
-        <DebugOverlay
-          deltaMs={debugStats.deltaMs}
-          ticksPerSec={debugStats.ticksPerSec}
-          fps={fps}
-          sessionSeconds={Math.floor((nowTs - sessionStartRef.current) / 1000)}
-          gameState={gameState}
-        />
+        {debugOverlay ? (
+          <DebugOverlay
+            deltaMs={debugStats.deltaMs}
+            ticksPerSec={debugStats.ticksPerSec}
+            fps={fps}
+            sessionSeconds={Math.floor((nowTs - sessionStartRef.current) / 1000)}
+            gameState={gameState}
+          />
+        ) : null}
       </div>
-      <div className="absolute right-4 top-20 z-10">
-        <Menu open={menuOpen} onClose={() => setMenuOpen(false)} />
-      </div>
+      {menuOpen ? (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#0b0704]/70 px-4 py-6 backdrop-blur-sm">
+          <Menu
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            lastSavedAt={lastSavedAt}
+            nextSaveAt={nextSaveAt}
+            nowTs={nowTs}
+          />
+        </div>
+      ) : null}
       <HiveContextMenu
         open={contextMenu.open}
         x={contextMenu.x}

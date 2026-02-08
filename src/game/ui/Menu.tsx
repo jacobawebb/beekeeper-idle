@@ -8,9 +8,18 @@ import { useGameStore } from "@/game/state/store";
 type MenuProps = {
   open: boolean;
   onClose: () => void;
+  lastSavedAt: number | null;
+  nextSaveAt: number | null;
+  nowTs: number;
 };
 
-export default function Menu({ open, onClose }: MenuProps) {
+export default function Menu({
+  open,
+  onClose,
+  lastSavedAt,
+  nextSaveAt,
+  nowTs,
+}: MenuProps) {
   const setGameState = useGameStore((state) => state.setGameState);
   const musicVolume =
     useGameStore((state) => state.gameState?.settings.audio.musicVolume) ?? 0.6;
@@ -18,9 +27,18 @@ export default function Menu({ open, onClose }: MenuProps) {
     useGameStore((state) => state.gameState?.settings.audio.sfxVolume) ?? 0.7;
   const setMusicVolume = useGameStore((state) => state.setMusicVolume);
   const setSfxVolume = useGameStore((state) => state.setSfxVolume);
+  const debug = useGameStore((state) => state.debug);
+  const setDebugFlag = useGameStore((state) => state.setDebugFlag);
   const [status, setStatus] = useState<string | null>(null);
   const [exportValue, setExportValue] = useState("");
   const [importValue, setImportValue] = useState("");
+
+  const nextInMs = nextSaveAt ? Math.max(0, nextSaveAt - nowTs) : null;
+  const nextInSec =
+    nextInMs !== null ? Math.ceil(nextInMs / 1000) : null;
+  const lastSavedLabel = lastSavedAt
+    ? `Saved ${Math.max(0, Math.round((nowTs - lastSavedAt) / 1000))}s ago`
+    : "Not saved yet";
 
   if (!open) return null;
 
@@ -75,10 +93,10 @@ export default function Menu({ open, onClose }: MenuProps) {
   };
 
   return (
-    <div className="pointer-events-auto w-[320px] rounded-2xl border border-[#5a3a22] bg-[#24160d] px-4 py-4 text-[#f3e4c8] shadow-2xl backdrop-blur">
+    <div className="pointer-events-auto w-[min(92vw,720px)] rounded-3xl border border-[#5a3a22] bg-[#24160d] px-6 py-6 text-[#f3e4c8] shadow-2xl backdrop-blur">
       <div className="flex items-center justify-between">
-        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#d7b98a]">
-          Menu
+        <div className="text-xs font-semibold uppercase tracking-[0.28em] text-[#d7b98a]">
+          Game Menu
         </div>
         <button
           type="button"
@@ -89,7 +107,7 @@ export default function Menu({ open, onClose }: MenuProps) {
         </button>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 text-xs text-[#e1c79b]">
+      <div className="mt-5 flex flex-col gap-4 text-xs text-[#e1c79b]">
         <div className="rounded-xl border border-[#5a3a22] bg-[#2c1b10] px-3 py-3">
           <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7b98a]">
             Audio
@@ -165,6 +183,53 @@ export default function Menu({ open, onClose }: MenuProps) {
           >
             Reset Save
           </button>
+        </div>
+
+        <div className="rounded-xl border border-[#5a3a22] bg-[#2c1b10] px-3 py-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7b98a]">
+            Save Status
+          </div>
+          <div className="mt-2 text-[11px] uppercase tracking-[0.18em] text-[#e1c79b]">
+            <div>{lastSavedLabel}</div>
+            <div>
+              Next save {nextInSec !== null ? `in ${nextInSec}s` : "pending"}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[#5a3a22] bg-[#2c1b10] px-3 py-3">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7b98a]">
+            Debug
+          </div>
+          <div className="mt-3 grid gap-2 text-[11px]">
+            <label className="flex items-center justify-between gap-3">
+              <span>Overlay</span>
+              <input
+                type="checkbox"
+                checked={debug.overlay}
+                onChange={(event) => setDebugFlag("overlay", event.target.checked)}
+                className="h-4 w-4 accent-[#c28b4b]"
+              />
+            </label>
+            <label className="flex items-center justify-between gap-3">
+              <span>Bee Stats Log</span>
+              <input
+                type="checkbox"
+                checked={debug.beesStats}
+                onChange={(event) => setDebugFlag("beesStats", event.target.checked)}
+                className="h-4 w-4 accent-[#c28b4b]"
+              />
+            </label>
+            <label className="flex items-center justify-between gap-3">
+              <span>Bee Markers</span>
+              <input
+                type="checkbox"
+                checked={debug.beesMarkers}
+                onChange={(event) => setDebugFlag("beesMarkers", event.target.checked)}
+                className="h-4 w-4 accent-[#c28b4b]"
+              />
+            </label>
+          </div>
         </div>
 
         {status ? (

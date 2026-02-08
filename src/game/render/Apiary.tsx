@@ -1,6 +1,6 @@
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useGameStore } from "@/game/state/store";
 import HiveModel from "./HiveModel";
 import { CURRENCY_PALETTE } from "@/game/ui/currency";
@@ -31,6 +31,7 @@ type ApiaryProps = {
 export default function Apiary({ onHiveContextMenu }: ApiaryProps) {
   const onHiveClick = useGameStore((state) => state.onHiveClick);
   const gameState = useGameStore((state) => state.gameState);
+  const setHiveWorldPositions = useGameStore((state) => state.setHiveWorldPositions);
   const hives = useMemo<HiveData[]>(() => {
     if (!gameState || gameState.hives.length === 0) {
       return [{ id: "hive-1", position: [0, 0, 0] }];
@@ -44,6 +45,13 @@ export default function Apiary({ onHiveContextMenu }: ApiaryProps) {
       };
     });
   }, [gameState]);
+  useEffect(() => {
+    const next: Record<string, [number, number, number]> = {};
+    hives.forEach((hive) => {
+      next[hive.id] = hive.position;
+    });
+    setHiveWorldPositions(next);
+  }, [hives, setHiveWorldPositions]);
   const [floaters, setFloaters] = useState<FloatingHoney[]>([]);
   const [pulseKey, setPulseKey] = useState(0);
   const floaterIdRef = useRef(0);

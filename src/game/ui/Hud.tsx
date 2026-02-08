@@ -34,18 +34,9 @@ function computeHoneyPerSecond(state: GameState) {
 type HudProps = {
   onMenuToggle: () => void;
   menuOpen: boolean;
-  lastSavedAt: number | null;
-  nextSaveAt: number | null;
-  nowTs: number;
 };
 
-export default function Hud({
-  onMenuToggle,
-  menuOpen,
-  lastSavedAt,
-  nextSaveAt,
-  nowTs,
-}: HudProps) {
+export default function Hud({ onMenuToggle, menuOpen }: HudProps) {
   const gameState = useGameStore((state) => state.gameState);
 
   const metrics = useMemo(() => {
@@ -67,129 +58,113 @@ export default function Hud({
     };
   }, [gameState]);
 
-  const nextInMs = nextSaveAt ? Math.max(0, nextSaveAt - nowTs) : null;
-  const nextInSec =
-    nextInMs !== null ? Math.ceil(nextInMs / 1000) : null;
-
-  const lastSavedLabel = lastSavedAt
-    ? `Saved ${Math.max(0, Math.round((nowTs - lastSavedAt) / 1000))}s ago`
-    : "Not saved yet";
-
   return (
-    <div className="pointer-events-auto w-full max-w-lg">
-      <div className="wood-panel px-4 py-3 text-[#f3e4c8]">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
-        <div className="flex flex-col gap-3">
-          <div>
-            <Tooltip
-              label="Honey"
-              description="Primary currency produced by hives."
-              source="Basic hives"
-              rate={`${metrics.honeyPerSec} / sec`}
-            >
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em]">
-                <CurrencyIcon currency="honey" />
-                <span style={{ color: CURRENCY_PALETTE.honey.color }}>
-                  Honey
-                </span>
+    <div className="pointer-events-auto w-full max-w-xl">
+      <div className="wood-panel px-3 py-2 text-[#f3e4c8]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="min-w-[170px]">
+              <Tooltip
+                label="Honey"
+                description="Primary currency produced by hives."
+                source="Basic hives"
+                rate={`${metrics.honeyPerSec} / sec`}
+              >
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em]">
+                  <CurrencyIcon currency="honey" />
+                  <span style={{ color: CURRENCY_PALETTE.honey.color }}>
+                    Honey
+                  </span>
+                </div>
+              </Tooltip>
+              <div
+                className="mt-1 text-2xl font-semibold"
+                style={{ color: CURRENCY_PALETTE.honey.color }}
+              >
+                {metrics.honey}
               </div>
-            </Tooltip>
-            <div
-              className="mt-1 text-2xl font-semibold"
-              style={{ color: CURRENCY_PALETTE.honey.color }}
-            >
-              {metrics.honey}
+              <div
+                className="text-xs font-semibold uppercase tracking-[0.2em]"
+                style={{ color: CURRENCY_PALETTE.honey.color }}
+              >
+                {metrics.honeyPerSec} / sec
+              </div>
             </div>
-            <div
-              className="text-xs font-semibold uppercase tracking-[0.2em]"
-              style={{ color: CURRENCY_PALETTE.honey.color }}
-            >
-              {metrics.honeyPerSec} / sec
+
+            <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.18em] text-[#e1c79b]">
+              <div className="wood-border rounded-xl px-3 py-2">
+                <Tooltip
+                  label="Wax"
+                  description="Secondary currency unlocked via upgrades."
+                  source="Evolved hives"
+                  rate="0 / sec"
+                >
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    <CurrencyIcon currency="wax" size={12} />
+                    <span style={{ color: CURRENCY_PALETTE.wax.color }}>
+                      Wax
+                    </span>
+                  </div>
+                </Tooltip>
+                <div
+                  className="mt-1 text-sm font-semibold"
+                  style={{ color: CURRENCY_PALETTE.wax.color }}
+                >
+                  {metrics.wax}
+                </div>
+              </div>
+              <div className="wood-border rounded-xl px-3 py-2">
+                <Tooltip
+                  label="Royal Jelly"
+                  description="Premium resource for hive evolution."
+                  source="Advanced hives"
+                  rate="0 / sec"
+                >
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    <CurrencyIcon currency="royalJelly" size={12} />
+                    <span style={{ color: CURRENCY_PALETTE.royalJelly.color }}>
+                      Royal
+                    </span>
+                  </div>
+                </Tooltip>
+                <div
+                  className="mt-1 text-sm font-semibold"
+                  style={{ color: CURRENCY_PALETTE.royalJelly.color }}
+                >
+                  {metrics.royalJelly}
+                </div>
+              </div>
+              <div className="wood-border rounded-xl px-3 py-2">
+                <Tooltip
+                  label="Research"
+                  description="Used for long-term automation and tech."
+                  source="Research labs"
+                  rate="0 / sec"
+                >
+                  <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    <CurrencyIcon currency="researchPoints" size={12} />
+                    <span style={{ color: CURRENCY_PALETTE.researchPoints.color }}>
+                      Research
+                    </span>
+                  </div>
+                </Tooltip>
+                <div
+                  className="mt-1 text-sm font-semibold"
+                  style={{ color: CURRENCY_PALETTE.researchPoints.color }}
+                >
+                  {metrics.researchPoints}
+                </div>
+              </div>
             </div>
           </div>
-        <div className="grid grid-cols-2 gap-2 text-xs uppercase tracking-[0.18em] text-[#e1c79b]">
-          <div
-            className="wood-border rounded-xl px-2 py-2 text-center"
-            style={{
-              borderColor: CURRENCY_PALETTE.wax.soft,
-              backgroundColor: CURRENCY_PALETTE.wax.soft,
-              color: CURRENCY_PALETTE.wax.color,
-            }}
+
+          <button
+            type="button"
+            onClick={onMenuToggle}
+            className="h-8 rounded-md border border-[#5a3a22] px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7b98a] transition hover:bg-[#3b2415]"
           >
-            <Tooltip
-              label="Wax"
-              description="Secondary currency unlocked via upgrades."
-              source="Evolved hives"
-              rate="0 / sec"
-            >
-              <div className="flex items-center justify-center gap-1 text-[10px]">
-                <CurrencyIcon currency="wax" size={12} />
-                <span>Wax</span>
-              </div>
-            </Tooltip>
-            <div className="mt-1 text-sm font-semibold">{metrics.wax}</div>
-          </div>
-          <div
-            className="wood-border rounded-xl px-2 py-2 text-center"
-            style={{
-              borderColor: CURRENCY_PALETTE.royalJelly.soft,
-              backgroundColor: CURRENCY_PALETTE.royalJelly.soft,
-              color: CURRENCY_PALETTE.royalJelly.color,
-            }}
-          >
-            <Tooltip
-              label="Royal Jelly"
-              description="Premium resource for hive evolution."
-              source="Advanced hives"
-              rate="0 / sec"
-            >
-              <div className="flex items-center justify-center gap-1 text-[10px]">
-                <CurrencyIcon currency="royalJelly" size={12} />
-                <span>Royal</span>
-              </div>
-            </Tooltip>
-            <div className="mt-1 text-sm font-semibold">
-              {metrics.royalJelly}
-            </div>
-          </div>
-          <div
-            className="wood-border rounded-xl px-2 py-2 text-center"
-            style={{
-              borderColor: CURRENCY_PALETTE.researchPoints.soft,
-              backgroundColor: CURRENCY_PALETTE.researchPoints.soft,
-              color: CURRENCY_PALETTE.researchPoints.color,
-            }}
-          >
-            <Tooltip
-              label="Research"
-              description="Used for long-term automation and tech."
-              source="Research labs"
-              rate="0 / sec"
-            >
-              <div className="flex items-center justify-center gap-1 text-[10px]">
-                <CurrencyIcon currency="researchPoints" size={12} />
-                <span>Research</span>
-              </div>
-            </Tooltip>
-            <div className="mt-1 text-sm font-semibold">
-              {metrics.researchPoints}
-            </div>
-          </div>
-          <div className="wood-border rounded-xl px-2 py-2 text-center text-[10px] uppercase tracking-[0.18em] text-[#d7b98a]">
-            <div>{lastSavedLabel}</div>
-            <div>
-              Next save {nextInSec !== null ? `in ${nextInSec}s` : "pending"}
-            </div>
-          </div>
-        </div>
-      </div>
-        <button
-          type="button"
-          onClick={onMenuToggle}
-          className="h-8 self-start rounded-md border border-[#5a3a22] px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7b98a] transition hover:bg-[#3b2415]"
-        >
-          {menuOpen ? "Close" : "Menu"}
-        </button>
+            {menuOpen ? "Close" : "Menu"}
+          </button>
         </div>
       </div>
     </div>

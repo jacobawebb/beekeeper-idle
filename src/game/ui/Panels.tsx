@@ -20,10 +20,16 @@ export default function Panels() {
   const upgradeClickPower = useGameStore((state) => state.upgradeClickPower);
   const addHiveToSwarm = useGameStore((state) => state.addHiveToSwarm);
   const purchaseHive = useGameStore((state) => state.purchaseHive);
+  const autoUpgradeEnabled =
+    useGameStore((state) => state.gameState?.settings.automation.autoUpgradeEnabled) ??
+    false;
+  const setAutoUpgradeEnabled = useGameStore((state) => state.setAutoUpgradeEnabled);
   const [activeTab, setActiveTab] = useState<"global" | "hives" | "av">("global");
   const [selectedHiveId, setSelectedHiveId] = useState<string | null>(null);
 
   const honeyMultiplier = gameState?.upgrades.globalMultipliers.honey ?? 1;
+  const autoUpgradeUnlocked =
+    gameState?.hives.some((hive) => hive.evolutionTier >= 1) ?? false;
 
   const hiveCards = useMemo(() => {
     if (!gameState) return [];
@@ -278,6 +284,25 @@ export default function Panels() {
               >
                 <span className="relative">Purchase Hive</span>
               </button>
+              <div className="mt-4 rounded-lg border border-[#5a3a22] px-3 py-2 text-xs text-[#e1c79b]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d7b98a]">
+                    Auto Upgrade
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={autoUpgradeEnabled}
+                    disabled={!autoUpgradeUnlocked}
+                    onChange={(event) => setAutoUpgradeEnabled(event.target.checked)}
+                    className="h-4 w-4 accent-[#c28b4b]"
+                  />
+                </div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-[#c9b086]">
+                  {autoUpgradeUnlocked
+                    ? "Auto upgrades hives when affordable."
+                    : "Unlocks after first evolution."}
+                </div>
+              </div>
             </div>
           </div>
           <div className="wood-border rounded-xl px-4 py-3">

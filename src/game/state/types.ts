@@ -33,6 +33,9 @@ export type GameState = {
       musicVolume: number;
       sfxVolume: number;
     };
+    automation: {
+      autoUpgradeEnabled: boolean;
+    };
   };
   flags: {
     hasBackedUpKey: boolean;
