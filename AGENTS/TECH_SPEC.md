@@ -28,8 +28,19 @@ The project is split into clear layers:
 - 3D scene reflects state, never owns logic
 - UI triggers actions, engine applies rules
 
+## Extension Points
+
+- `engine/model.ts` defines biome + automation extension interfaces.
+- Add new biome/automation data in engine layer, then reference from state schema.
+- Render layer should only consume `GameState` and never mutate it directly.
+
 ## Identity
 
 - Client-side keypair generated via Web Crypto
 - Public key hash used as userId
 - Private key required to sign or restore state
+
+## Reset Path
+
+- Clear IndexedDB database `beekeeper-idle` (tables: `identity`, `saves`) to reset all progress.
+- Programmatic reset is available via `resetSave()` in `src/game/state/save.ts`.

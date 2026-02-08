@@ -1,77 +1,87 @@
-# Tasks – Beekeeper Idle
+## Phase 11 – World Simulation: Bees, Placement, Economy Pressure
 
-## Conventions
+### Task 41 – Bee agent system (looped pathing + return generates honey)
 
-- Tasks are numbered and permanent.
-- Completed tasks are marked [x].
-- New tasks are appended, not inserted.
-- Each task should be finishable in 1–3 focused sessions.
-
----
-
-## Phase 1 – Foundations
-
-### Task 1 – Project bootstrap
-
-- [x] Initialise Next.js project with TS, Tailwind, App Router
-- [x] Add core dependencies (Three, R3F, Zustand, Dexie)
+- [ ] Replace “bounce then float” with a simple agent state machine:
+  - IDLE_AT_HIVE → OUTBOUND → FORAGING → RETURNING → DELIVER → repeat
+- [ ] Each bee has:
+  - hiveId, position, velocity
+  - target (flower/tree/hive)
+  - state + stateTimer
+- [ ] On DELIVER: add honey to that hive (or global) based on bee payload
 
 DONE WHEN:
 
-- App runs locally
-- Dependencies installed
+- Bees continuously move in loops, not frozen
+- Bees return to hive and honey increases on return
+- No excessive CPU usage with 50–200 bees
 
 ---
 
-### Task 2 – GameRoot client entry
+### Task 42 – Bee targets: flowers/trees as forage nodes
 
-- [x] Create GameRoot component
-- [x] Render placeholder content
+- [ ] Add “forage nodes” list from scenery objects (flowers, trees)
+- [ ] Bees choose a forage node based on distance + randomness
+- [ ] Ensure nodes are discoverable (not too sparse)
 
 DONE WHEN:
 
-- page.tsx renders GameRoot
-- No SSR errors
+- Bees visibly travel to scenery objects (flowers/trees)
+- Multiple hives don’t send all bees to the same exact node every time
 
 ---
 
-### Task 3 – AGENTS system
+### Task 43 – Bee count scaling (more bees per hive level)
 
-- [ ] Create /AGENTS directory
-- [ ] Add core documentation files
-- [ ] Commit initial task structure
+- [ ] Define scaling rule: beesPerHive = base + floor(level \* factor)
+- [ ] Cap bees per hive for performance, or use LOD strategy (visual-only beyond cap)
+- [ ] Ensure scaling affects production (more bees = more delivery events)
 
 DONE WHEN:
 
-- Files exist
-- Repo documents intent clearly
+- Increasing a hive’s level increases visible bees (up to cap)
+- Honey rate increases in a way that feels consistent
 
 ---
 
-## Phase 2 – Rendering
+### Task 44 – Hive placement: random but spaced (Poisson-ish)
 
-### Task 4 – Base 3D scene
+- [ ] Replace grid placement with random placement within bounds
+- [ ] Enforce min distance between hives (and optionally between hive and props)
+- [ ] Attempt N samples then expand radius if needed (avoid infinite loops)
 
-- [ ] Three.js canvas renders
-- [ ] Ground plane visible
-- [ ] Placeholder hive mesh visible
+DONE WHEN:
 
-BLOCKED BY:
-
-- Task 3
-
----
-
-## Phase 3 – Game Systems
-
-(TBD) Placeholder hive mesh visible
-
-BLOCKED BY:
-
-- Task 3
+- New hives spawn in natural-looking positions
+- No overlap / too-close placements
+- Placement remains fast even with many hives
 
 ---
 
-## Phase 3 – Game Systems
+### Task 45 – Hive floating numbers: fix positioning + update loop
 
-(TBD)
+- [ ] Fix per-hive “rate” labels so they:
+  - always face camera (billboard)
+  - update reliably (no stale state)
+  - don’t jitter or clip into objects
+- [ ] Add debug toggle to confirm value source and update frequency
+
+DONE WHEN:
+
+- Each hive displays its production rate consistently
+- Numbers do not disappear or freeze during normal play
+
+---
+
+### Task 46 – Economy pressure: scaling costs with hive count
+
+- [ ] Rebalance so buying many hives is not trivial:
+  - Hive purchase cost scales with owned hive count
+  - Upgrade costs scale partially with hive count OR per-hive upgrade costs scale harder
+- [ ] Ensure early game is still fun (first 3–5 hives easy, then ramps)
+- [ ] Display cost formula clearly in UI (or at least “scales with hives owned”)
+
+DONE WHEN:
+
+- You can’t mindlessly buy infinite hives early
+- Progress remains paced but not grindy
